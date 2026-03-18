@@ -15,7 +15,7 @@
 将仓库克隆到 Claude Code 的 skill 目录，所有项目都能直接调用：
 
 ```bash
-git clone git@github.com:SkyWongHZ/sky-skill-tool.git ~/.claude/skills
+git clone https://github.com/SkyWongHZ/sky-skill-tool.git ~/.claude/skills
 ```
 
 之后在任意项目里对 Claude 说 "帮我整理周报" 就会自动触发对应 skill。
