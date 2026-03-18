@@ -39,6 +39,9 @@ bun.lock
 # Go
 vendor/
 
+# Claude Code local settings
+.claude/settings.local.json
+
 # Project specific
 example/
 docs/
