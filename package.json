@@ -1,0 +1,12 @@
+{
+  "name": "sky-skill-tool",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "workspaces": [
+    "packages/*"
+  ],
+  "scripts": {
+    "test": "echo \"No tests yet\""
+  }
+}
