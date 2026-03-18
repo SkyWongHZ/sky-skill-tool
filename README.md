@@ -37,8 +37,6 @@ sky-skill-tool/
 │       └── SKILL.md
 ├── packages/                 # 跨 skill 共享的工具库
 ├── scripts/                  # 仓库级自动化脚本
-├── docs/                     # 文档
-│   └── skill-repo-guide.md   # 仓库搭建指南
 └── CLAUDE.md                 # Claude Code 项目指令
 ```
 
@@ -88,5 +86,3 @@ skills/my-skill/
 - 描述文件：统一命名 `SKILL.md`
 - frontmatter 的 `name` 用英文（和目录名一致），`description` 末尾加触发词
 - SKILL.md 保持精简，内容过多时拆到 `references/` 子目录按需加载
-
-详细规范见 [docs/skill-repo-guide.md](./docs/skill-repo-guide.md)。
