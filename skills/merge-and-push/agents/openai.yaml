@@ -1,0 +1,4 @@
+interface:
+  display_name: "Merge and Push"
+  short_description: "提交功能改动并安全合并、推送到测试环境或生产环境分支"
+  default_prompt: "使用 $merge-and-push 提交当前功能分支，并合并推送到测试或生产分支。"

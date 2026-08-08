@@ -7,6 +7,7 @@
     "packages/*"
   ],
   "scripts": {
+    "install:skills": "node scripts/link-skills.mjs",
     "test": "echo \"No tests yet\""
   }
 }
