@@ -7,7 +7,7 @@
 | Skill | 类型 | 说明 |
 |---|---|---|
 | [weekly-report](./skills/weekly-report/SKILL.md) | 纯 prompt | 读取原始日报，合并同类项，生成格式化周报 md 文件 |
-| [merge-and-push](./skills/merge-and-push/SKILL.md) | 工作流 + Python | 安全合并推送；测试环境自动触发流水线，生产环境人工打包 |
+| [merge-and-push](./skills/merge-and-push/SKILL.md) | 工作流 + Python | 测试自动触发流水线；生产按权限直接推送或创建 GitLab MR、人工打包 |
 
 ## 安装使用
 

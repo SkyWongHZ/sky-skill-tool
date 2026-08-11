@@ -11,6 +11,9 @@ from pathlib import Path
 from typing import Any
 
 
+PRODUCTION_MODES = {"direct-push", "merge-request"}
+
+
 class GitError(RuntimeError):
     """Raised when a required Git command fails."""
 
@@ -174,6 +177,9 @@ def inspect(args: argparse.Namespace) -> dict[str, Any]:
     production_branch = args.production_branch or local_config(
         root, "merge-and-push.productionBranch"
     )
+    production_mode = args.production_mode or local_config(
+        root, "merge-and-push.productionMode"
+    )
     remote = args.remote or local_config(root, "merge-and-push.remote") or "origin"
     target_branch = {
         "test": test_branch,
@@ -197,6 +203,19 @@ def inspect(args: argparse.Namespace) -> dict[str, Any]:
     relation = (
         branch_relation(root, local_target_ref, remote_target_ref)
         if local_target_ref and remote_target_ref
+        else None
+    )
+
+    local_source_ref = f"refs/heads/{source_branch}" if source_branch else None
+    remote_source_ref = (
+        f"refs/remotes/{remote}/{source_branch}"
+        if remote_exists and source_branch
+        else None
+    )
+    remote_source_sha = ref_sha(root, remote_source_ref) if remote_source_ref else None
+    source_remote_relation = (
+        branch_relation(root, local_source_ref, remote_source_ref)
+        if local_source_ref and remote_source_ref and remote_source_sha
         else None
     )
 
@@ -241,23 +260,53 @@ def inspect(args: argparse.Namespace) -> dict[str, Any]:
             "missing_test_mapping",
             "Production requires a configured test branch for the test-before-production gate.",
         )
+    if args.environment == "production" and not production_mode:
+        add_blocker(
+            blockers,
+            "missing_production_mode",
+            "Production mode is not configured; choose 'direct-push' or 'merge-request'.",
+        )
+    if (
+        args.environment == "production"
+        and production_mode
+        and production_mode not in PRODUCTION_MODES
+    ):
+        add_blocker(
+            blockers,
+            "invalid_production_mode",
+            f"Configured production mode is invalid: {production_mode}",
+        )
     if target_branch and not remote_target_sha:
         add_blocker(
             blockers,
             "missing_remote_target",
             f"Remote target branch '{remote}/{target_branch}' does not exist in fetched refs.",
         )
-    if relation and relation["state"] in {"ahead", "diverged"}:
+    uses_target_worktree = args.environment == "test" or (
+        args.environment == "production" and production_mode == "direct-push"
+    )
+    if uses_target_worktree and relation and relation["state"] in {"ahead", "diverged"}:
         add_blocker(
             blockers,
             f"target_{relation['state']}",
             f"Local target '{target_branch}' is {relation['state']} relative to '{remote}/{target_branch}'.",
         )
-    if target_worktree and target_worktree.get("dirty"):
+    if uses_target_worktree and target_worktree and target_worktree.get("dirty"):
         add_blocker(
             blockers,
             "dirty_target_worktree",
             f"Target branch '{target_branch}' is checked out in a dirty worktree: {target_worktree['path']}",
+        )
+    if (
+        args.environment == "production"
+        and production_mode == "merge-request"
+        and source_remote_relation
+        and source_remote_relation["state"] in {"behind", "diverged"}
+    ):
+        add_blocker(
+            blockers,
+            f"source_remote_{source_remote_relation['state']}",
+            f"Local source branch '{source_branch}' is {source_remote_relation['state']} relative to '{remote}/{source_branch}'.",
         )
     if args.environment == "production" and test_branch and in_test is not True:
         add_blocker(
@@ -279,6 +328,7 @@ def inspect(args: argparse.Namespace) -> dict[str, Any]:
             "remote": remote,
             "test_branch": test_branch,
             "production_branch": production_branch,
+            "production_mode": production_mode,
             "target_branch": target_branch,
         },
         "source": {
@@ -298,6 +348,10 @@ def inspect(args: argparse.Namespace) -> dict[str, Any]:
             },
             "test": {"remote_sha": remote_test_sha},
             "production": {"remote_sha": remote_production_sha},
+            "source_remote": {
+                "remote_sha": remote_source_sha,
+                "relation": source_remote_relation,
+            },
         },
         "ancestry": {
             "source_in_remote_test": in_test,
@@ -306,7 +360,7 @@ def inspect(args: argparse.Namespace) -> dict[str, Any]:
         "worktrees": worktrees,
         "target_worktree": target_worktree,
         "blockers": blockers,
-        "note": "Run git fetch for the selected remote immediately before using remote-tracking results.",
+        "note": "Run git fetch --prune for the selected remote immediately before using remote-tracking results.",
     }
 
 
@@ -316,6 +370,7 @@ def build_parser() -> argparse.ArgumentParser:
     parser.add_argument("--environment", choices=("test", "production"))
     parser.add_argument("--test-branch")
     parser.add_argument("--production-branch")
+    parser.add_argument("--production-mode", choices=tuple(sorted(PRODUCTION_MODES)))
     parser.add_argument("--remote")
     parser.add_argument("--pretty", action="store_true")
     return parser

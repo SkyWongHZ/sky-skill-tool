@@ -1,4 +1,4 @@
 interface:
   display_name: "Merge and Push"
-  short_description: "安全合并推送，测试环境自动触发流水线、生产环境人工打包"
-  default_prompt: "使用 $merge-and-push 提交并合并当前功能分支；提测时自动触发测试流水线，生产发布保留人工打包。"
+  short_description: "安全提测并按权限直接推送生产或创建 GitLab MR"
+  default_prompt: "使用 $merge-and-push 提交当前功能分支；提测时安全触发测试流水线，生产时按权限直接推送或创建 GitLab MR。"
