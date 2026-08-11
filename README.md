@@ -7,7 +7,7 @@
 | Skill | 类型 | 说明 |
 |---|---|---|
 | [weekly-report](./skills/weekly-report/SKILL.md) | 纯 prompt | 读取原始日报，合并同类项，生成格式化周报 md 文件 |
-| [merge-and-push](./skills/merge-and-push/SKILL.md) | 工作流 + Python | 提交功能改动，安全合并并推送到测试或生产分支 |
+| [merge-and-push](./skills/merge-and-push/SKILL.md) | 工作流 + Python | 安全合并推送；测试环境自动触发流水线，生产环境人工打包 |
 
 ## 安装使用
 
@@ -52,7 +52,9 @@ sky-skill-tool/
 │   └── merge-and-push/       # 工作流 Skill
 │       ├── SKILL.md
 │       ├── agents/openai.yaml
-│       └── scripts/inspect_repo.py
+│       └── scripts/
+│           ├── inspect_repo.py
+│           └── trigger_test_pipeline.py
 ├── packages/                 # 跨 skill 共享的工具库
 ├── scripts/                  # 安装、发布等仓库级自动化
 ├── AGENTS.md                 # Agent 项目指令
