@@ -8,6 +8,7 @@
 |---|---|---|
 | [weekly-report](./skills/weekly-report/SKILL.md) | 纯 prompt | 读取原始日报，合并同类项，生成格式化周报 md 文件 |
 | [merge-and-push](./skills/merge-and-push/SKILL.md) | 工作流 + Python | 测试自动触发流水线；生产按权限直接推送或创建 GitLab MR、人工打包 |
+| [bjsm-cloud-code](./skills/bjsm-cloud-code/SKILL.md) | 纯 prompt | 规范 bjsm-cloud 后端需求开发、影响范围分析和功能分支 Review |
 
 ## 安装使用
 
@@ -23,7 +24,7 @@ cd sky-skill-tool
 按需链接到 Codex/Agents 的全局 Skill 目录：
 
 ```bash
-npm run install:skills -- weekly-report merge-and-push
+npm run install:skills -- weekly-report merge-and-push bjsm-cloud-code
 ```
 
 默认目标是 `~/.agents/skills`。如需安装到其他 Agent 的 Skill 根目录，可设置：
