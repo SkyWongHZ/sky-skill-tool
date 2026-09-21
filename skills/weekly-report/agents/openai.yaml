@@ -1,0 +1,4 @@
+interface:
+  display_name: "周报整理"
+  short_description: "读取本地日报，合并同类工作并标注进度，生成可复制到钉钉的周报"
+  default_prompt: "请使用 $weekly-report 整理当前目录中的原始日报，生成周报文件并输出完整内容。"
