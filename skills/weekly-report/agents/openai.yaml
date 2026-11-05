@@ -1,4 +1,4 @@
 interface:
-  display_name: "周报整理"
-  short_description: "读取本地日报，合并同类工作并标注进度，生成可复制到钉钉的周报"
-  default_prompt: "请使用 $weekly-report 整理当前目录中的原始日报，生成周报文件并输出完整内容。"
+  display_name: "日报与周报"
+  short_description: "根据项目提交生成日报草稿，汇总日报形成可审阅周报，并支持配置每日与节前自动汇总"
+  default_prompt: "请使用 $weekly-report，根据已配置项目的提交记录生成日报，或将我提供的日报整理成周报，保存文件并展示草稿。"
