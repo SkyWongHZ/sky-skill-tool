@@ -1,91 +1,75 @@
 ---
 name: bjsm-cloud-code
-description: Guide requirement analysis, backend development, code fixes, and feature-branch review for the bjsm-cloud Spring Boot monorepo. Use automatically only when a task targets bjsm-cloud and asks to discuss or implement a backend requirement, inspect affected modules, review Git changes or commits, or address adopted review findings; also use when the user explicitly invokes $bjsm-cloud-code. Do not apply it to unrelated Java repositories or frontend-only work.
+description: Guide bjsm-cloud backend requirement analysis, design, implementation, fixes, Git review, API verification, and acceptance. Use when a task targets these workflows in bjsm-cloud or explicitly invokes this skill. Do not apply its project conventions to unrelated Java repositories or frontend-only work.
 ---
 
 # BJSM Cloud Code
 
-Guide `bjsm-cloud` backend work from scope discovery through implementation or review. Keep discussion, development, review, and delivery as separate states so that analysis does not silently become code modification.
+按任务进入所需阶段：需求确认 → 设计 → 实现 → Review → 编译与静态检查 → 真实接口联调 → 验收记录 → 按需交付。只做分析或 review 时，不强制执行完整开发流程。
 
-## Establish context
+## 工作边界
 
-1. Confirm that the target repository is `bjsm-cloud`. If the request spans repositories, apply this workflow only to its backend portion.
-2. Read the repository's applicable `AGENTS.md`, requirement source, and relevant existing documentation completely. Treat `AGENTS.md` as authoritative for project rules not restated here.
-3. Inspect the current branch, worktree, production baseline, and user-owned changes before taking action. Preserve unrelated or untracked work.
-4. Classify the request:
-   - Discussion or analysis: inspect and explain only; do not modify code.
-   - Development or fix: require explicit authorization to implement, modify, or fix code.
-   - Review: remain read-only until the user explicitly adopts findings or requests fixes.
-   - Delivery: hand off commit, merge, push, pipeline, and branch cleanup work to `$merge-and-push`.
+- 讨论、分析、讲解只读；明确要求开发、实现或修复即授权对应范围内的代码修改。沿用已有授权，不重复索要确认，也不把讨论或文档编写当作代码实施授权。
+- Review 默认只读；用户采纳问题并要求修复后再修改。已有修复授权明确覆盖的问题可继续处理。
+- 跨仓库需求可读取相关前端消费者核实接口约定，但后端授权不自动扩大为修改全部前端或其他项目。
+- 提交、合并、推送、流水线和分支清理按请求转交 `$merge-and-push`；开发或验收完成不自动授权交付操作。
+- 本技能规定工作规则，不规定逐文件讲解节奏；讲解顺序和暂停方式遵循本次用户提示词。
 
-## Develop a feature
+## 项目上下文与事实依据
 
-### Research before coding
+1. 确认目标仓库，阅读适用的 `AGENTS.md`、`README.md`、需求来源和相关需求进度文档。具体 Java、SQL、权限、加密、金额、模块和验证规范以当前项目指令为准，不在此重复维护。
+2. 检查当前分支、工作区、已有修改及任务需要的比较基线。保护无关和未跟踪内容，不擅自覆盖、清理或暂存。过程中分支或文件发生变化时重新核对依据，不自动切换或回退。
+3. 按项目指令初始化或同步 CodeGraph；Java 符号、调用链和影响范围优先用 CodeGraph，配置、XML、SQL 和字面文本用 `rg`。工具不可用时说明并使用可行替代方式，不能声称已完成未进行的核查。
+4. 先看同模块、同业务现有实现、调用方和包结构，再提方案。需要时追到跨模块入口、共享消费者和实际配置。
+5. 区分文档描述、代码支持、配置启用和线上实际运行。类名、依赖名、注释和历史对话只是线索，不能单独证明当前行为；线上结论需要对应的运行或部署证据。
+6. 未确认内容写“待确认”，排查假设标为推测；没有证据不能宣布根因。避免输出凭据和患者隐私。
 
-1. Inspect analogous implementations in the same business module, their callers, and the established package structure before proposing changes.
-2. Prefer CodeGraph for Java symbols and call chains when the repository provides it; use `rg` for configuration, XML, SQL, and literal text.
-3. State the expected modification scope before coding. Include only actually affected backend modules and any verified impact on the management frontend, H5, database, or configuration.
-4. Wait for scope confirmation unless the user already confirmed the same scope in the current conversation. Do not treat requirement discussion or document writing as implementation authorization.
+## 需求分析与验收标准
 
-### Keep the implementation local and consistent
+- 明确业务目标、角色、入口、涉及模块及本次包含和不包含的内容。修改前说明实际范围和已核实的前端、数据库、配置影响。
+- 分别确认展示、编辑、必填校验、保存、清空和返回规则；不能把模板展示条件扩大为存储限制，也不能把后端兼容能力扩大为所有前端都必须改造。
+- 区分本次必需、必要兼容、仅需说明的预留事项和后续需求。对影响业务、权限或数据结构的关键歧义先确认；普通实现细节依项目风格决定。
+- 明确字段来源、类型、单位、状态和归属，区分当前关系/配置与生成时快照，不能默认用当前关系改写历史。
+- 将需求转成可观察的验收项：角色与前置条件、操作、预期返回和数据变化、相关失败行为及应保持的原有行为。按实际影响选场景，不机械添加无关检查。
+- 沿用已确认范围和验收标准；只有实质性范围变化或阻碍正确实现的歧义才重新讨论，不把常规实现选择变成审批点。
 
-- Search for an existing method or component before adding one. When reusing it, verify normal behavior, exception behavior, side effects, and existing callers; add a new implementation only when the existing contract is insufficient.
-- Before changing a shared utility, common module, global `application-*.properties`, database structure, or cross-module interface, explain why a business-local solution is insufficient and identify affected consumers.
-- Do not add feature-specific hospital IDs as standalone custom entries in `application-*.properties`. Keep institution-specific behavior inside the corresponding business module unless an authoritative requirement establishes a different shared configuration model.
-- Follow the target module's existing FORM, Controller, Service, DAO, and Mapper structure:
-  - Keep HTTP request boundaries in FORM and Controller.
-  - Keep business rules in Service.
-  - Keep data access in DAO and Mapper.
-  - Do not turn a one-off helper such as a Matcher into a standard architecture layer.
-- Add an auxiliary component only when it has a single clear responsibility, justified reuse across real callers, and a package location consistent with neighboring code.
-- Avoid unrelated refactors, generalized abstractions, and speculative cross-project changes.
+## 方案设计
 
-### Verify the result
+- 先找现有入口、服务、公共方法及数据结构，再决定新增方法、组件、字段或表。
+- 数据设计同时核对目标表、附近同类表、DO、Mapper/XML、迁移 SQL 和实际读写链路；区分已生效结构、未执行脚本和历史草案。
+- 新字段应能说明来源、写入时机、读取用途及现有字段为何不能承载。优先评估复用、查询计算或扩展，但不能混用业务含义、粒度、生命周期或权限不同的数据。
+- 派生值存储需要快照要求或有证据的查询成本等理由；未知值不能默认等同于 `0`。不臆造协议、状态和默认值来支撑新设计。
+- 无当前需求依据，不预加扩展 JSON、版本、重试或抽象机制。已经否定的方案，没有新需求或新证据不换名称重新引入。
+- 涉及共享工具、公共模块、全局配置、数据库结构或跨模块接口时，说明必要性、业务局部方案是否足够及受影响消费者。
+- 医院等机构特定行为沿用对应业务模块的配置机制；不把需求专用医院 ID 随意增加为全局 `application-*.properties` 配置或散落硬编码，除非明确需求规定了共享配置模型。
 
-Run the smallest sufficient verification for the actual change, following `AGENTS.md`. Reinspect the complete diff and report checks not run, environmental failures, and remaining risks honestly.
+## 后端实现
 
-## Review a feature branch
+- 沿用目标模块的分层、命名、包位置、分页、批量、缓存、异常和对象转换方式。FORM/Controller 处理请求边界，Service 放业务规则，DAO/Mapper 负责数据访问；不要把一次性辅助类推广为架构层。
+- 按需完整覆盖 Controller、FORM/QUERY、Service、DAO、Mapper Interface/XML、DO、VO/DTO 和 SQL。完整链路不等于每层都要新增文件；无必要的层保持原样。
+- 复用前检查参数、返回值、边界、异常、副作用和调用方。名称相似不代表契约相同，常量值相同不代表业务语义相同；现有契约足够时优先复用。
+- 不为少量去重改写无关新增/修改分支，不过多新增变量、方法、包装或抽象。辅助方法/组件应有清楚职责和维护价值；单次调用不自动意味着应删除，多处调用也不自动证明可以合并。
+- 新文件说明职责、现有替代方案、包位置和实际用途，不以文件数量少为优化目标。Java 和 SQL 保持可读，不引入无关依赖、升级、格式化或重构。
+- 对相关路径检查新增、编辑、查询、删除、重复请求、异步回写、重新生成和历史读取。区分不传、`null`、空字符串的保留/清空/默认/非法含义，并核实 ORM 更新和对象转换后的实际持久化行为。
+- 局部回写只更新本次负责的字段，避免旧的完整对象覆盖用户后来修改的数据。重试、重建和关联更新需保留业务要求的用户数据与历史信息。
+- 共享方法和字段检查全部受影响消费者。按真实影响检查权限、事务、动态数据源、加密、金额、状态和并发；先确认风险与现有能力，不凭“可能需要”新增锁、缓存、幂等表或重试框架。
+- 区分本次引入的问题、未扩大的历史问题、被本次依赖或加重的历史问题和可选优化。历史问题不顺带修改；必要兼容修改说明关联、交付影响及最小范围，并遵守当前修改授权。
 
-### Establish the review diff
+## SQL 与数据库变更
 
-1. Review without modifying files unless the user explicitly asks to fix adopted findings.
-2. Use the merge base with `origin/master` as the default production baseline. Inspect the final diff first, then the commit overview:
+- 参考附近同类表和现有迁移方式，沿用类型、长度、默认值、注释、顺序和索引风格；同步实体、映射和需求 SQL。
+- 明确目标数据源、执行对象与顺序、代码/SQL 部署依赖，以及存量数据、空值、兼容和回滚影响。
+- 根据实际发布方式决定幂等、重跑保护和部分执行后的恢复说明，不机械堆复杂脚本。升级 SQL 保留必要操作，背景与人工验证说明可放需求文档，不为减少行数删除必要逻辑。
+- 性能调整要有查询或执行证据，不凭 SQL 长度新增索引、缓存或重构。执行数据库修改遵守当前环境与授权，讨论/review 不自动执行。
+- 分别报告 SQL 已编写、已检查和已在哪个环境执行；提交 SQL 文件不等于数据库已升级。
 
-   ```bash
-   base=$(git merge-base origin/master HEAD)
-   git log --oneline "$base"..HEAD
-   git diff --stat "$base"...HEAD
-   git diff --name-status "$base"...HEAD
-   git diff "$base"...HEAD
-   git diff --check "$base"...HEAD
-   git diff -w --name-only "$base"...HEAD
-   ```
+## Review、验证与验收
 
-3. Inspect individual commits only when the overview shows scope drift, suspicious intermediate changes, or the user asks for commit-by-commit review.
-4. If the production branch or remote is different in repository instructions, use that authoritative baseline instead of `origin/master`.
+- 执行代码 review 时读取 [references/review.md](references/review.md)，确认比较基线与完整范围，按证据报告问题。
+- 实现完成后、执行接口联调或验收时读取 [references/verification-acceptance.md](references/verification-acceptance.md)，遵守项目验证约定，逐项核对验收标准并更新需求记录。只读 review 需要判断验证证据时也读取该文件，但不自动进行写入式联调。
 
-### Check the change
+## 解释与规则维护
 
-- Check business correctness and requirement boundaries before style preferences.
-- For every added file, identify its responsibility, existing alternative, package placement, and real callers. Do not optimize for fewer files; require a defensible purpose.
-- Inspect shared utilities, common modules, global properties, database changes, and cross-module interfaces as high-impact changes. Verify necessity and affected consumers.
-- Detect unrelated files, generated noise, broad formatting, and whitespace-only changes; require them to be removed from the feature diff.
-- Apply the security, permission, encryption, amount, MyBatis, SQL, and verification rules from `AGENTS.md` without duplicating them here.
-- When requirement or acceptance documents exist, compare their declared files, class names, configuration, test evidence, and behavior with the final code. Skip this check when no such documents exist.
-
-### Report findings
-
-List actionable findings first, ordered by severity. Give each finding a precise code location, evidence, impact, and recommended direction. Classify it as one of:
-
-- **Current feature issue**: introduced or expanded by the feature branch; address in this feature.
-- **Historical issue**: already present in the production baseline and not expanded; report it but do not modify it by default.
-- **Historical issue touched by this feature**: pre-existing, but directly depended on or worsened by the feature; explain whether it blocks delivery.
-- **Optional improvement**: does not affect current correctness; do not block delivery on it.
-
-When no actionable findings remain, say so explicitly and state residual verification gaps. Do not silently change code after reporting findings; wait for the user to adopt them.
-
-## Evolve this skill
-
-At the end of relevant work, propose reusable rule candidates only when evidence suggests the issue can recur. For each candidate, state the evidence, intended scope, and possible conflict with existing rules. Do not edit this skill automatically; update it only after the user explicitly adopts the candidate.
-
-Do not store requirement-specific IDs, class names, or one-off implementation details in this skill.
+- 先讲业务行为和影响，再用具体方法、代码和当前行号说明；前后对比尽量使用同一请求或数据例子，标明比较的版本。可结合用户的前端经验类比，但说明边界，不用术语代替解释。
+- 只在发现可重复问题时提出规则候选，说明证据、适用范围和与既有规则的冲突；用户采纳后才更新技能。
+- 不存放需求编号、医院/模板 ID、临时类名或部署地址。项目规范留在 `AGENTS.md`，需求事实留在进度文档，全局工具偏好留在全局规则，本技能组织工作流程。

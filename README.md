@@ -9,6 +9,7 @@
 | [weekly-report](./skills/weekly-report/SKILL.md) | 纯 prompt | 读取原始日报，合并同类项，生成格式化周报 md 文件 |
 | [merge-and-push](./skills/merge-and-push/SKILL.md) | 工作流 + Python | 测试自动触发流水线；生产按权限直接推送或创建 GitLab MR、人工打包 |
 | [bjsm-cloud-code](./skills/bjsm-cloud-code/SKILL.md) | 纯 prompt | 规范 bjsm-cloud 后端需求开发、影响范围分析和功能分支 Review |
+| [bajie-report-customization](./skills/bajie-report-customization/SKILL.md) | 工作流 | 根据禅道和飞书梳理医院报告定制，评估前后端及数据库影响，整理需求与验收 |
 
 ## 安装使用
 

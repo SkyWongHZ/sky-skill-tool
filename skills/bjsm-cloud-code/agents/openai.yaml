@@ -1,6 +1,6 @@
 interface:
   display_name: "BJSM Cloud Code"
-  short_description: "规范 bjsm-cloud 后端开发与功能分支 Review"
-  default_prompt: "使用 $bjsm-cloud-code 开发或 Review bjsm-cloud 后端功能。"
+  short_description: "规范 bjsm-cloud 后端需求设计、代码实现、Review 与接口验收"
+  default_prompt: "使用 $bjsm-cloud-code，按当前任务阶段分析、设计、开发、Review 或验收 bjsm-cloud 后端需求。"
 policy:
   allow_implicit_invocation: true

@@ -1,0 +1,4 @@
+interface:
+  display_name: "八戒睡眠医院报告定制"
+  short_description: "根据禅道需求核查医院报告的前后端与数据库影响，梳理需求与验收标准"
+  default_prompt: "用 $bajie-report-customization 分析这条禅道需求：<粘贴链接>"
